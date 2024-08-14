@@ -131,10 +131,10 @@ class _SlideshowScreenState extends State<SlideshowScreen> {
   Widget build(BuildContext context) {
     return Scaffold(backgroundColor: Colors.black,
       body: GestureDetector(onTap: _showCloseButton,
-        onHorizontalDragEnd: (details) {
-          if (details.primaryVelocity! > 0) {_previousImage();}
-          else if (details.primaryVelocity! < 0) {_nextImage();}
-        },
+        //onHorizontalDragEnd: (details) {
+        //  if (details.primaryVelocity! > 0) {_previousImage();}
+        //  else if (details.primaryVelocity! < 0) {_nextImage();}
+        //},
         child: Stack(
           children: [Center(child: Image.file(File(widget.images[currentIndex]), fit: BoxFit.contain,),),
             if (showCloseButton)
