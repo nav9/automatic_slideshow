@@ -1,3 +1,5 @@
+![Alt text](gallery/automaticSlideshow.png?raw=true "Sample screenshot of Automatic Slideshow")  
+
 # Automatic Slideshow
   
 A minimalist slideshow app for Android, built with Flutter. Allows selecting a folder of images (searches subfolders too), setting a time interval between image switching in seconds and viewing the images in best-fit mode. The swipe feature was removed due to Flutter being unable to cancel `Future.delay`.
