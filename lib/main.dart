@@ -95,8 +95,6 @@ class _SlideshowHomePageState extends State<SlideshowHomePage> {
             SizedBox(height: 20),
             ElevatedButton(onPressed: _selectFolder, child: Text('Select Folder', style: TextStyle(color: Colors.grey[900]),), style: ElevatedButton.styleFrom(foregroundColor: Colors.grey, backgroundColor: Colors.orangeAccent,),),
 
-            //SizedBox(height: 20),
-            //ElevatedButton(onPressed: _selectFolder, child: Text('Select Folder'),),
             SizedBox(height: 60),
             Row(mainAxisAlignment: MainAxisAlignment.start,
                 children: [Checkbox(value: _isWakelockEnabled, onChanged: _toggleWakelock, checkColor: Colors.black, activeColor: Colors.grey[800],),
@@ -130,8 +128,9 @@ class SlideshowScreen extends StatefulWidget {
 
 class _SlideshowScreenState extends State<SlideshowScreen> {
   int currentIndex = 0;
-  bool showCloseButton = false;
+  bool showOverlayButtons = false;
   Timer? _timer;
+  late bool _isPlaying = false;
 
   @override
   void initState() {
@@ -140,49 +139,75 @@ class _SlideshowScreenState extends State<SlideshowScreen> {
   }
 
   void _startSlideshow() {
-    //Future.delayed(Duration(seconds: widget.interval), _nextImage);
     _cancelTimer();
     _timer = Timer.periodic(Duration(seconds: widget.interval), (timer) {_nextImage();});
   }
 
   void _nextImage() {
     if (mounted) {
-      setState(() {currentIndex = (currentIndex + 1) % widget.images.length;});
+      setState(() {_isPlaying = true; currentIndex = (currentIndex + 1) % widget.images.length;});
       _startSlideshow();
     }
   }
 
   void _previousImage() {
-    setState(() {currentIndex = (currentIndex - 1 + widget.images.length) % widget.images.length;});
+    setState(() {_isPlaying = true; currentIndex = (currentIndex - 1 + widget.images.length) % widget.images.length;});
     _startSlideshow();
   }
 
   void _showCloseButton() {
-    setState(() {showCloseButton = true;});
-    Future.delayed(Duration(seconds: 3), () {setState(() {showCloseButton = false;});});
+    setState(() {showOverlayButtons = true;});
+    Future.delayed(Duration(seconds: 3), () {setState(() {showOverlayButtons = false;});});
   }
 
+  void _togglePlayPause() {if (_isPlaying) {_pauseAtImage();} else {_forceNextImage();}}
+  void _pauseAtImage() {setState(() {_isPlaying = false; _cancelTimer();});}
   void _cancelTimer() {if (_timer != null) {_timer!.cancel();}}
+  void _forceNextImage() {_cancelTimer(); _nextImage();}
+  void _forcePreviousImage() {_cancelTimer(); _previousImage();}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(backgroundColor: Colors.black,
       body: GestureDetector(onTap: _showCloseButton,
         onHorizontalDragEnd: (details) {
-         if (details.primaryVelocity! > 0) {_cancelTimer(); _previousImage();}
-         else if (details.primaryVelocity! < 0) {_cancelTimer(); _nextImage();}
+         if (details.primaryVelocity! > 0) {_forcePreviousImage();}
+         else if (details.primaryVelocity! < 0) {_forceNextImage();}
         },
         child: Stack(
           children: [Center(child: Image.file(File(widget.images[currentIndex]), fit: BoxFit.contain,),),
-            if (showCloseButton)
-              Positioned(top: 20, right: 20, child: GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(color: Colors.black.withOpacity(0.5), padding: EdgeInsets.all(10), child: Icon(Icons.close, color: Colors.white, size: 30),),
+            if (showOverlayButtons)
+              Positioned(top: 20, right: 20, child: GestureDetector(onTap: () => Navigator.pop(context),
+                                                                    child: Container(color: Colors.black.withOpacity(0.5), padding: EdgeInsets.all(10), child: Icon(Icons.close, color: Colors.grey, size: 30),),
+                                                                   ),
+                        ),
+            if (showOverlayButtons)
+            Positioned(bottom: 20, left: 0, right: 0,
+              child: Row(mainAxisAlignment: MainAxisAlignment.center,
+                children: [GestureDetector(onTap: _forcePreviousImage,
+                                           child: Container(color: Colors.black.withOpacity(0.5), padding: EdgeInsets.all(10), child: Icon(Icons.navigate_before, color: Colors.grey, size: 30),),
+                                          ),
+                  SizedBox(width: 20), // Spacing between buttons
+                           GestureDetector(onTap: _togglePlayPause,
+                                           child: Container(color: Colors.black.withOpacity(0.5), padding: EdgeInsets.all(10),
+                                                            child: Icon(_isPlaying ? Icons.pause : Icons.play_arrow, color: Colors.grey, size: 30,),
+                                                           ),
+                                          ),
+                           SizedBox(width: 20), // Spacing between buttons
+
+                           GestureDetector(onTap: _forceNextImage,
+                                           child: Container(color: Colors.black.withOpacity(0.5), padding: EdgeInsets.all(10), child: Icon(Icons.navigate_next, color: Colors.grey, size: 30),),
+                                          ),
+                          ],
+                       ),
+                    ),
+                 ],
                 ),
-              ),
-          ],
+
+
+
+
         ),
-      ),
-    );
+      );
   }
 }
