@@ -30,10 +30,12 @@ class _SlideshowHomePageState extends State<SlideshowHomePage> {
   List<String> imagePaths = [];
   String folderPath = "";
   late bool _isWakelockEnabled; // State variable for checkbox
+  late bool _searchSubdirectories; //search subdirectories for images
 
   @override
   void initState() {
     super.initState();
+    _searchSubdirectories = true;
     _isWakelockEnabled = true;
     if (_isWakelockEnabled) {WakelockPlus.enable();} else {WakelockPlus.disable();}
   }
@@ -50,9 +52,13 @@ class _SlideshowHomePageState extends State<SlideshowHomePage> {
     }
   }
 
+  void toggleSearchSubdirectories(bool? checkboxValue) {
+    setState(() {_searchSubdirectories = checkboxValue ?? !_searchSubdirectories;});
+  }
+
   void _searchForImages(Directory dir) {
     List<String> images = [];
-    dir.list(recursive: true).listen((file) {
+    dir.list(recursive: _searchSubdirectories).listen((file) {
       if (file is File) {
         String fileName = file.path.split('/').last.toLowerCase();
         // Check if the file name ends with any of the supported image types
@@ -62,9 +68,7 @@ class _SlideshowHomePageState extends State<SlideshowHomePage> {
     }).onDone(() {
       setState(() {imagePaths = images;});
       if (images.isEmpty) {ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('No images found in $folderPath')));}
-      else {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => SlideshowScreen(images: images, interval: interval),),);
-      }
+      else {Navigator.push(context, MaterialPageRoute(builder: (context) => SlideshowScreen(images: images, interval: interval),),);}
     });
   }
 
@@ -93,13 +97,18 @@ class _SlideshowHomePageState extends State<SlideshowHomePage> {
 
             //SizedBox(height: 20),
             //ElevatedButton(onPressed: _selectFolder, child: Text('Select Folder'),),
-            SizedBox(height: 20),
-            Row(mainAxisAlignment: MainAxisAlignment.center,
+            SizedBox(height: 60),
+            Row(mainAxisAlignment: MainAxisAlignment.start,
                 children: [Checkbox(value: _isWakelockEnabled, onChanged: _toggleWakelock, checkColor: Colors.black, activeColor: Colors.grey[800],),
                            Text('Prevent screen lock during slideshow', style: TextStyle(color: Colors.grey[800]),),
                           ],
                ),
-
+            SizedBox(height: 15),
+            Row(mainAxisAlignment: MainAxisAlignment.start,
+              children: [Checkbox(value: _searchSubdirectories, onChanged: toggleSearchSubdirectories, checkColor: Colors.black, activeColor: Colors.grey[800],),
+                Text('Search subfolders for images too', style: TextStyle(color: Colors.grey[800]),),
+              ],
+            ),
 
 
           ],
