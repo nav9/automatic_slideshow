@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'dart:async';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 void main() {
@@ -29,14 +30,11 @@ class _SlideshowHomePageState extends State<SlideshowHomePage> {
   List<String> imagePaths = [];
   String folderPath = "";
   late bool _isWakelockEnabled; // State variable for checkbox
-  late int MAX_LEN_IMAGE_EXTN;
 
   @override
   void initState() {
     super.initState();
-    _isWakelockEnabled = false;
-    MAX_LEN_IMAGE_EXTN = supportedImageTypes.map((type) => type.length).reduce((a, b) => a > b ? a : b);
-    debugPrint('MAX LEN = $MAX_LEN_IMAGE_EXTN');
+    _isWakelockEnabled = true;
     WakelockPlus.disable(); // Ensure wakelock is disabled by default
   }
 
@@ -56,9 +54,10 @@ class _SlideshowHomePageState extends State<SlideshowHomePage> {
     List<String> images = [];
     dir.list(recursive: true).listen((file) {
       if (file is File) {
-        if (supportedImageTypes.contains(file.path.toLowerCase().substring(file.path.length - MAX_LEN_IMAGE_EXTN))) {
-          images.add(file.path);
-        }
+        String fileName = file.path.split('/').last.toLowerCase();
+        // Check if the file name ends with any of the supported image types
+        bool isImage = supportedImageTypes.any((ext) => fileName.endsWith(ext));
+        if (isImage) {images.add(file.path);}
       }
     }).onDone(() {
       setState(() {imagePaths = images;});
@@ -123,6 +122,7 @@ class SlideshowScreen extends StatefulWidget {
 class _SlideshowScreenState extends State<SlideshowScreen> {
   int currentIndex = 0;
   bool showCloseButton = false;
+  Timer? _timer;
 
   @override
   void initState() {
@@ -131,7 +131,9 @@ class _SlideshowScreenState extends State<SlideshowScreen> {
   }
 
   void _startSlideshow() {
-    Future.delayed(Duration(seconds: widget.interval), _nextImage);
+    //Future.delayed(Duration(seconds: widget.interval), _nextImage);
+    _cancelTimer();
+    _timer = Timer.periodic(Duration(seconds: widget.interval), (timer) {_nextImage();});
   }
 
   void _nextImage() {
@@ -143,6 +145,7 @@ class _SlideshowScreenState extends State<SlideshowScreen> {
 
   void _previousImage() {
     setState(() {currentIndex = (currentIndex - 1 + widget.images.length) % widget.images.length;});
+    _startSlideshow();
   }
 
   void _showCloseButton() {
@@ -152,14 +155,16 @@ class _SlideshowScreenState extends State<SlideshowScreen> {
     });
   }
 
+  void _cancelTimer() {if (_timer != null) {_timer!.cancel();}}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(backgroundColor: Colors.black,
       body: GestureDetector(onTap: _showCloseButton,
-        //onHorizontalDragEnd: (details) {
-        //  if (details.primaryVelocity! > 0) {_previousImage();}
-        //  else if (details.primaryVelocity! < 0) {_nextImage();}
-        //},
+        onHorizontalDragEnd: (details) {
+         if (details.primaryVelocity! > 0) {_cancelTimer(); _previousImage();}
+         else if (details.primaryVelocity! < 0) {_cancelTimer(); _nextImage();}
+        },
         child: Stack(
           children: [Center(child: Image.file(File(widget.images[currentIndex]), fit: BoxFit.contain,),),
             if (showCloseButton)
