@@ -24,25 +24,25 @@ class SlideshowHomePage extends StatefulWidget {
 }
 
 class _SlideshowHomePageState extends State<SlideshowHomePage> {
+  final List supportedImageTypes = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
   int interval = 6;//seconds to pause at each image (can be overridden by user via GUI)
   List<String> imagePaths = [];
   String folderPath = "";
   late bool _isWakelockEnabled; // State variable for checkbox
+  late int MAX_LEN_IMAGE_EXTN;
 
   @override
   void initState() {
     super.initState();
     _isWakelockEnabled = false;
+    MAX_LEN_IMAGE_EXTN = supportedImageTypes.map((type) => type.length).reduce((a, b) => a > b ? a : b);
+    debugPrint('MAX LEN = $MAX_LEN_IMAGE_EXTN');
     WakelockPlus.disable(); // Ensure wakelock is disabled by default
   }
 
-  void _incrementInterval() {
-    setState(() {interval++;});
-  }
+  void _incrementInterval() {setState(() {interval++;});}
 
-  void _decrementInterval() {
-    setState(() {if (interval > 1) interval--;});
-  }
+  void _decrementInterval() {setState(() {if (interval > 1) interval--;});}
 
   Future<void> _selectFolder() async {
     String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
@@ -56,7 +56,7 @@ class _SlideshowHomePageState extends State<SlideshowHomePage> {
     List<String> images = [];
     dir.list(recursive: true).listen((file) {
       if (file is File) {
-        if (['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'].contains(file.path.toLowerCase().substring(file.path.length - 5))) {
+        if (supportedImageTypes.contains(file.path.toLowerCase().substring(file.path.length - MAX_LEN_IMAGE_EXTN))) {
           images.add(file.path);
         }
       }
