@@ -35,7 +35,7 @@ class _SlideshowHomePageState extends State<SlideshowHomePage> {
   void initState() {
     super.initState();
     _isWakelockEnabled = true;
-    WakelockPlus.disable(); // Ensure wakelock is disabled by default
+    if (_isWakelockEnabled) {WakelockPlus.enable();} else {WakelockPlus.disable();}
   }
 
   void _incrementInterval() {setState(() {interval++;});}
@@ -150,9 +150,7 @@ class _SlideshowScreenState extends State<SlideshowScreen> {
 
   void _showCloseButton() {
     setState(() {showCloseButton = true;});
-    Future.delayed(Duration(seconds: 3), () {
-      setState(() {showCloseButton = false;});
-    });
+    Future.delayed(Duration(seconds: 3), () {setState(() {showCloseButton = false;});});
   }
 
   void _cancelTimer() {if (_timer != null) {_timer!.cancel();}}
