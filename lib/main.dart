@@ -47,7 +47,7 @@ class _SlideshowHomePageState extends State<SlideshowHomePage> {
     List<String> images = [];
     dir.list(recursive: true).listen((file) {
       if (file is File) {
-        if (['.jpg', '.jpeg', '.png', '.gif', '.bmp'].contains(file.path.toLowerCase().substring(file.path.length - 4))) {
+        if (['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'].contains(file.path.toLowerCase().substring(file.path.length - 5))) {
           images.add(file.path);
         }
       }
