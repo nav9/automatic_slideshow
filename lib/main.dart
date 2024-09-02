@@ -24,7 +24,7 @@ class SlideshowHomePage extends StatefulWidget {
 }
 
 class _SlideshowHomePageState extends State<SlideshowHomePage> {
-  int interval = 5;
+  int interval = 6;//seconds to pause at each image (can be overridden by user via GUI)
   List<String> imagePaths = [];
   String folderPath = "";
   late bool _isWakelockEnabled; // State variable for checkbox
