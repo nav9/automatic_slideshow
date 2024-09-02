@@ -116,6 +116,10 @@ class _SlideshowHomePageState extends State<SlideshowHomePage> {
   }
 }
 
+
+
+
+
 class SlideshowScreen extends StatefulWidget {
   final List<String> images;
   final int interval;
@@ -129,7 +133,8 @@ class SlideshowScreen extends StatefulWidget {
 class _SlideshowScreenState extends State<SlideshowScreen> {
   int currentIndex = 0;
   bool showOverlayButtons = false;
-  Timer? _timer;
+  Timer? _slideshowTimer;
+  Timer? _overlayButtonsTimer;
   late bool _isPlaying = false;
 
   @override
@@ -139,8 +144,8 @@ class _SlideshowScreenState extends State<SlideshowScreen> {
   }
 
   void _startSlideshow() {
-    _cancelTimer();
-    _timer = Timer.periodic(Duration(seconds: widget.interval), (timer) {_nextImage();});
+    _cancelSlideshowTimer();
+    _slideshowTimer = Timer.periodic(Duration(seconds: widget.interval), (timer) {_nextImage();});
   }
 
   void _nextImage() {
@@ -155,52 +160,56 @@ class _SlideshowScreenState extends State<SlideshowScreen> {
     _startSlideshow();
   }
 
-  void _showCloseButton() {
+  void _showOverlayButtons() {
     setState(() {showOverlayButtons = true;});
-    Future.delayed(Duration(seconds: 3), () {setState(() {showOverlayButtons = false;});});
+    _cancelOverlayButtonsTimer();
+    _overlayButtonsTimer = Timer.periodic(Duration(seconds: 3), (timer) {
+      setState(() {showOverlayButtons = false;});
+    });
+    //Future.delayed(Duration(seconds: 3), () {setState(() {showOverlayButtons = false;});});
   }
 
   void _togglePlayPause() {if (_isPlaying) {_pauseAtImage();} else {_forceNextImage();}}
-  void _pauseAtImage() {setState(() {_isPlaying = false; _cancelTimer();});}
-  void _cancelTimer() {if (_timer != null) {_timer!.cancel();}}
-  void _forceNextImage() {_cancelTimer(); _nextImage();}
-  void _forcePreviousImage() {_cancelTimer(); _previousImage();}
+  void _pauseAtImage() {setState(() {_isPlaying = false; _cancelSlideshowTimer();});}
+  void _cancelSlideshowTimer() {if (_slideshowTimer != null) {_slideshowTimer!.cancel();}}
+  void _forceNextImage() {_cancelSlideshowTimer(); _nextImage();}
+  void _forcePreviousImage() {_cancelSlideshowTimer(); _previousImage();}
+  void _cancelOverlayButtonsTimer() {if (_overlayButtonsTimer != null) {_overlayButtonsTimer!.cancel();}}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(backgroundColor: Colors.black,
-      body: GestureDetector(onTap: _showCloseButton,
+      body: GestureDetector(onTap: _showOverlayButtons,
         onHorizontalDragEnd: (details) {
          if (details.primaryVelocity! > 0) {_forcePreviousImage();}
          else if (details.primaryVelocity! < 0) {_forceNextImage();}
         },
         child: Stack(
           children: [Center(child: Image.file(File(widget.images[currentIndex]), fit: BoxFit.contain,),),
-            if (showOverlayButtons)
-              Positioned(top: 20, right: 20, child: GestureDetector(onTap: () => Navigator.pop(context),
-                                                                    child: Container(color: Colors.black.withOpacity(0.5), padding: EdgeInsets.all(10), child: Icon(Icons.close, color: Colors.grey, size: 30),),
-                                                                   ),
-                        ),
-            if (showOverlayButtons)
-            Positioned(bottom: 20, left: 0, right: 0,
-              child: Row(mainAxisAlignment: MainAxisAlignment.center,
-                children: [GestureDetector(onTap: _forcePreviousImage,
-                                           child: Container(color: Colors.black.withOpacity(0.5), padding: EdgeInsets.all(10), child: Icon(Icons.navigate_before, color: Colors.grey, size: 30),),
-                                          ),
-                  SizedBox(width: 20), // Spacing between buttons
-                           GestureDetector(onTap: _togglePlayPause,
-                                           child: Container(color: Colors.black.withOpacity(0.5), padding: EdgeInsets.all(10),
-                                                            child: Icon(_isPlaying ? Icons.pause : Icons.play_arrow, color: Colors.grey, size: 30,),
-                                                           ),
-                                          ),
-                           SizedBox(width: 20), // Spacing between buttons
-
-                           GestureDetector(onTap: _forceNextImage,
-                                           child: Container(color: Colors.black.withOpacity(0.5), padding: EdgeInsets.all(10), child: Icon(Icons.navigate_next, color: Colors.grey, size: 30),),
-                                          ),
-                          ],
-                       ),
-                    ),
+                      if (showOverlayButtons)
+                        Positioned(top: 20, right: 20, child: GestureDetector(onTap: () => Navigator.pop(context),
+                                                                              child: Container(color: Colors.black.withOpacity(0.5), padding: EdgeInsets.all(10), child: Icon(Icons.close, color: Colors.grey, size: 30),),
+                                                                             ),
+                                  ),
+                      if (showOverlayButtons)
+                      Positioned(bottom: 20, left: 0, right: 0,
+                        child: Row(mainAxisAlignment: MainAxisAlignment.center,
+                          children: [GestureDetector(onTap: () {_forcePreviousImage(); _showOverlayButtons();},
+                                                     child: Container(color: Colors.black.withOpacity(0.5), padding: EdgeInsets.all(10), child: Icon(Icons.navigate_before, color: Colors.grey, size: 30),),
+                                                    ),
+                                     SizedBox(width: 5), // Spacing between buttons
+                                     GestureDetector(onTap: () {_togglePlayPause(); _showOverlayButtons();},
+                                                     child: Container(color: Colors.black.withOpacity(0.5), padding: EdgeInsets.all(10),
+                                                                      child: Icon(_isPlaying ? Icons.pause : Icons.play_arrow, color: Colors.grey, size: 30,),
+                                                                     ),
+                                                    ),
+                                     SizedBox(width: 5), // Spacing between buttons
+                                     GestureDetector(onTap: () {_forceNextImage(); _showOverlayButtons();},
+                                                     child: Container(color: Colors.black.withOpacity(0.5), padding: EdgeInsets.all(10), child: Icon(Icons.navigate_next, color: Colors.grey, size: 30),),
+                                                    ),
+                                    ],
+                                 ),
+                              ),
                  ],
                 ),
 
