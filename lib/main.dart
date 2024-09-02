@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 void main() {
   runApp(SlideshowApp());
@@ -26,6 +27,14 @@ class _SlideshowHomePageState extends State<SlideshowHomePage> {
   int interval = 5;
   List<String> imagePaths = [];
   String folderPath = "";
+  late bool _isWakelockEnabled; // State variable for checkbox
+
+  @override
+  void initState() {
+    super.initState();
+    _isWakelockEnabled = false;
+    WakelockPlus.disable(); // Ensure wakelock is disabled by default
+  }
 
   void _incrementInterval() {
     setState(() {interval++;});
@@ -60,6 +69,10 @@ class _SlideshowHomePageState extends State<SlideshowHomePage> {
     });
   }
 
+  void _toggleWakelock(bool? checkboxValue) {
+    setState(() {if (checkboxValue == true) {WakelockPlus.enable();_isWakelockEnabled = true;} else {WakelockPlus.disable();_isWakelockEnabled = false;}});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,15 +82,27 @@ class _SlideshowHomePageState extends State<SlideshowHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Pause seconds between images:", style: TextStyle(color: Colors.white)),
+            Text("Pause seconds between images:", style: TextStyle(color: Colors.grey)),
             Row(mainAxisAlignment: MainAxisAlignment.center,
-              children: [IconButton(icon: Icon(Icons.remove), color: Colors.white, onPressed: _decrementInterval,),
-                          Text('$interval', style: TextStyle(color: Colors.white, fontSize: 24),),
-                          IconButton(icon: Icon(Icons.add), color: Colors.white, onPressed: _incrementInterval,),
+              children: [IconButton(icon: Icon(Icons.remove), color: Colors.grey, onPressed: _decrementInterval,),
+                          Text('$interval', style: TextStyle(color: Colors.grey, fontSize: 24),),
+                          IconButton(icon: Icon(Icons.add), color: Colors.grey, onPressed: _incrementInterval,),
                         ],
             ),
             SizedBox(height: 20),
-            ElevatedButton(onPressed: _selectFolder, child: Text('Select Folder'),),
+            ElevatedButton(onPressed: _selectFolder, child: Text('Select Folder', style: TextStyle(color: Colors.grey[900]),), style: ElevatedButton.styleFrom(foregroundColor: Colors.grey, backgroundColor: Colors.orangeAccent,),),
+
+            //SizedBox(height: 20),
+            //ElevatedButton(onPressed: _selectFolder, child: Text('Select Folder'),),
+            SizedBox(height: 20),
+            Row(mainAxisAlignment: MainAxisAlignment.center,
+                children: [Checkbox(value: _isWakelockEnabled, onChanged: _toggleWakelock, checkColor: Colors.black, activeColor: Colors.grey[800],),
+                           Text('Prevent screen lock during slideshow', style: TextStyle(color: Colors.grey[800]),),
+                          ],
+               ),
+
+
+
           ],
         ),
       ),
